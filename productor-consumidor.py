@@ -19,6 +19,8 @@ def hora_actual():
 def proveedor(nombre, cantidad_insumos):
 // productor  
     for i in range(cantidad_insumos):
+        # Generamos el número de insumo (1, 2, 3...)
+        insumo = i + 1
 
         # Esperar hasta que haya espacio disponible
         vacios.acquire()
@@ -28,7 +30,7 @@ def proveedor(nombre, cantidad_insumos):
 
         almacen.append(insumo)
 
-        print(f"[{hora_actual()}] "f"[Hilo: {get_ident()}] {nombre} coloca un insumo" )
+        print(f"[{hora_actual()}] "f"[Hilo: {get_ident()}] {nombre} coloco insumo: {insumo}" )
 
         mutex.release()
 
@@ -50,7 +52,7 @@ def cocinero(nombre, cantidad_insumos):
 
         insumo = almacen.pop(0)
 
-        print( f"[{hora_actual()}] "f"[Hilo: {get_ident()}] {nombre} retira {insumo}")
+        print( f"[{hora_actual()}] "f"[Hilo: {get_ident()}] {nombre} retira insumo: {insumo}")
 
         mutex.release()
 
