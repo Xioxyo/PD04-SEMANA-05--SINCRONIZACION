@@ -1,57 +1,32 @@
-from threading import Thread, get_ident, Lock
+from threading import Thread, get_ident
 from time import sleep
 from datetime import datetime
 
-# Estructura del buffer compartida (SIN SEMÁFOROS)
 buffer = []
 
-# Candado exclusivo para que la consola no mezcle textos
-print_lock = Lock()
-
-def hora_actual():
-    return datetime.now().strftime("%H:%M:%S.%f")[:-3]
-
-def print_seguro(mensaje):
-    with print_lock:
-        print(mensaje)
+def hora_actual(): return datetime.now().strftime("%H:%M:%S.%f")[:-3]
 
 def productor_caos(nombre, cantidad_datos):
     for i in range(cantidad_datos):
-        dato = i + 1
-        
-        print_seguro(f"[{hora_actual()}] [Hilo: {get_ident()}] {nombre} listo para colocar dato...")
-        
-        # Acceso directo al buffer sin Mutex
+        dato = f"{nombre}-{i+1}"
+        print(f"[{hora_actual()}] [Hilo: {get_ident()}] {nombre} colocó: {dato}")
         buffer.append(dato)
-        print_seguro(f"[{hora_actual()}] [Hilo: {get_ident()}] {nombre} colocó dato: {dato} | Buffer actual: {buffer}")
-        
-        sleep(0.3)
+        sleep(0.1)
 
 def consumidor_caos(nombre, cantidad_datos):
     for i in range(cantidad_datos):
-        print_seguro(f"[{hora_actual()}] [Hilo: {get_ident()}] {nombre} intentando retirar dato...")
-        
-        # AQUÍ CRASHEARÁ: Intentará hacer pop(0) de una lista vacía.
-        dato = buffer.pop(0) 
-        print_seguro(f"[{hora_actual()}] [Hilo: {get_ident()}] {nombre} retira dato: {dato} | Buffer actual: {buffer}")
-        
+        print(f"[{hora_actual()}] [Hilo: {get_ident()}] {nombre} intentando retirar...")
+        dato = buffer.pop(0) # Crash seguro (IndexError)
+        print(f"[{hora_actual()}] [Hilo: {get_ident()}] {nombre} retiró: {dato}")
         sleep(0.01)
 
-
 if __name__ == "__main__":
-    print_seguro("Iniciando simulación (VERSIÓN CAOS - CONDICIÓN DE CARRERA)...\n")
-    hilos = []
-    
-    # Se crean 2 productores y 2 consumidores concurrentes
-    hilos.append(Thread(target=productor_caos, args=("Productor A", 3)))
-    hilos.append(Thread(target=productor_caos, args=("Productor B", 3)))
-    hilos.append(Thread(target=consumidor_caos, args=("Consumidor 1", 3)))
-    hilos.append(Thread(target=consumidor_caos, args=("Consumidor 2", 3)))
-
-    for hilo in hilos:
-        hilo.start()
-
-    for hilo in hilos:
-        hilo.join() 
-
-    print_seguro("\nSimulación finalizada (este mensaje se imprime aunque los consumidores hayan muerto).")
+    print("Iniciando simulación (VERSIÓN CAOS)...\n")
+    hilos = [
+        Thread(target=productor_caos, args=("ProvA", 3)),
+        Thread(target=productor_caos, args=("ProvB", 3)),
+        Thread(target=consumidor_caos, args=("Con1", 3)),
+        Thread(target=consumidor_caos, args=("Con2", 3))
+    ]
+    for h in hilos: h.start()
+    for h in hilos: h.join()
